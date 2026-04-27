@@ -35,7 +35,6 @@
             padding: 15px;
         }
 
-        /* --- AUTH CARD --- */
         .auth-card {
             width: 100%;
             max-width: 400px;
@@ -85,39 +84,21 @@
             padding: 10px; font-size: 0.8rem; margin-top: 20px;
         }
 
-        /* --- FILTERS --- */
         .filters-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-            align-items: center;
+            display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center;
         }
         .filter-btn {
-            padding: 8px 15px;
-            border-radius: 8px;
-            border: 1px solid #2d3748;
-            background: var(--input-bg);
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 600;
+            padding: 8px 15px; border-radius: 8px; border: 1px solid #2d3748;
+            background: var(--input-bg); color: var(--text-muted); cursor: pointer;
+            font-size: 0.8rem; font-weight: 600;
         }
-        .filter-btn.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
+        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
         .month-selector {
-            padding: 8px;
-            border-radius: 8px;
-            background: var(--input-bg);
-            color: white;
-            border: 1px solid #2d3748;
-            font-size: 0.8rem;
+            padding: 8px; border-radius: 8px; background: var(--input-bg);
+            color: white; border: 1px solid #2d3748; font-size: 0.8rem;
         }
 
-        /* --- MODAL POLÍTICAS --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
@@ -130,13 +111,8 @@
             border-radius: 24px; border: 1px solid rgba(255,255,255,0.1);
             position: relative;
         }
-        .modal-content h2 { margin-bottom: 20px; color: var(--primary); }
-        .modal-content h3 { margin: 25px 0 10px 0; font-size: 1.1rem; border-left: 4px solid var(--primary); padding-left: 10px; }
-        .modal-content p, .modal-content li { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 10px; }
-        .modal-content ul, .modal-content ol { padding-left: 20px; margin-bottom: 15px; }
         .close-modal { position: absolute; top: 20px; right: 20px; cursor: pointer; color: var(--text-muted); }
 
-        /* --- DASHBOARD --- */
         .app-container { width: 100%; max-width: 1100px; display: none; margin: 40px 0; }
         .app-container.active { display: block; }
         .nav-app { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
@@ -147,21 +123,13 @@
         .history-item { 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 16px 20px; background: rgba(255,255,255,0.02); 
-            border-radius: 16px; margin-bottom: 12px; 
-            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 16px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.03);
         }
 
-        .item-info { flex-grow: 1; }
-        .item-values { text-align: right; margin-right: 15px; }
-        
         .date-badge {
-            font-size: 0.65rem;
-            background: rgba(255,255,255,0.05);
-            padding: 2px 8px;
-            border-radius: 6px;
-            color: var(--text-muted);
-            display: inline-block;
-            margin-top: 4px;
+            font-size: 0.65rem; background: rgba(255,255,255,0.05);
+            padding: 2px 8px; border-radius: 6px; color: var(--text-muted);
+            display: inline-block; margin-top: 4px;
         }
 
         .action-btn { background: transparent; border: none; cursor: pointer; padding: 5px; border-radius: 6px; }
@@ -173,6 +141,9 @@
             border: 1px dashed var(--primary); background: linear-gradient(to bottom, rgba(99, 102, 241, 0.05), transparent);
         }
         .btn-mp { background: var(--mercadopago); display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 30px; font-size: 0.85rem; margin-top: 15px; }
+
+        /* Ad Unit Container */
+        .ad-unit-wrapper { margin-top: 30px; text-align: center; overflow: hidden; }
 
         @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
     </style>
@@ -187,19 +158,7 @@
             <ul>
                 <li><strong>Privacidade:</strong> Todos os seus dados são salvos exclusivamente no seu navegador (LocalStorage).</li>
                 <li><strong>Segurança:</strong> Se você limpar os dados do navegador, as informações serão excluídas permanentemente.</li>
-                <li><strong>Responsabilidade:</strong> Ferramenta para fins informativos. Não nos responsabilizamos por perdas de dados.</li>
-                <li><strong>Uso Gratuito:</strong> O sistema é mantido por contribuições voluntárias.</li>
             </ul>
-
-            <h3>🚀 Passo a Passo: Como Utilizar</h3>
-            <ol>
-                <li><strong>Criando sua Conta:</strong> Vá em "Registrar", preencha seus dados e faça o login.</li>
-                <li><strong>Dashboard:</strong> Acompanhe seus Ganhos, Despesas e os Saldos do Mês e Total.</li>
-                <li><strong>Transações:</strong> Preencha a descrição, valor e data para salvar novos registros.</li>
-                <li><strong>Filtros:</strong> Use o seletor de mês ou o botão "Tudo" para navegar no seu histórico.</li>
-                <li><strong>Editar/Excluir:</strong> Use os ícones no histórico para ajustar ou remover entradas.</li>
-                <li><strong>Sair:</strong> Clique em "Sair" para encerrar sua sessão local com segurança.</li>
-            </ol>
             <button class="btn" style="margin-top: 25px;" onclick="closeModal()">Entendi</button>
         </div>
     </div>
@@ -222,17 +181,11 @@
             <div style="text-align:center; margin-top:15px; font-size:0.85rem; color:var(--text-muted)">
                 Não tem conta? <span onclick="toggleAuth('register-screen')" style="color:var(--primary); cursor:pointer; font-weight:700">Registrar</span>
             </div>
-            <button class="btn btn-outline" onclick="openModal()">
-                <i data-lucide="info" style="width:14px; vertical-align:middle"></i> Ajuda & Políticas
-            </button>
         </div>
 
         <div id="register-screen" class="auth-screen">
             <form id="reg-form" onsubmit="event.preventDefault(); handleRegister();">
-                <header>
-                    <h1>Nova<span>Conta</span></h1>
-                    <p>Crie seu perfil local</p>
-                </header>
+                <header><h1>Nova<span>Conta</span></h1></header>
                 <div class="input-group">
                     <label>Nome</label>
                     <div class="input-wrapper"><i data-lucide="user"></i><input type="text" id="reg-name" placeholder="Seu nome" required></div>
@@ -256,10 +209,7 @@
     <div id="app-screen" class="app-container">
         <div class="nav-app">
             <h2 id="user-name-display" style="font-weight: 800;">Olá</h2>
-            <div style="display:flex; gap:10px">
-                <button onclick="openModal()" style="background: rgba(99,102,241,0.1); border: 1px solid var(--primary); color: var(--primary); padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: 600;">Ajuda</button>
-                <button onclick="handleLogout()" style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: 600;">Sair</button>
-            </div>
+            <button onclick="handleLogout()" style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: 600;">Sair</button>
         </div>
 
         <div class="summary">
@@ -295,20 +245,10 @@
             </div>
 
             <div class="card-box">
-                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3>Histórico</h3>
-                    <div style="display:flex; gap:8px; align-items: center;">
-                        <button class="filter-btn" id="btn-all-time" onclick="toggleAllTime()">Tudo</button>
-                        <input type="month" id="filter-month" class="month-selector" onchange="updateUI()">
-                    </div>
+                    <input type="month" id="filter-month" class="month-selector" onchange="updateUI()">
                 </div>
-
-                <div class="filters-container">
-                    <button class="filter-btn active" id="filter-all" onclick="setFilter('all')">Todos</button>
-                    <button class="filter-btn" id="filter-in" onclick="setFilter('in')">Entradas</button>
-                    <button class="filter-btn" id="filter-out" onclick="setFilter('out')">Saídas</button>
-                </div>
-
                 <div id="history"></div>
             </div>
         </div>
@@ -317,12 +257,24 @@
             <h3>Apoie o Projeto 🚀</h3>
             <a href="https://mpago.la/1K43Rnr" target="_blank" class="btn btn-mp"><i data-lucide="heart"></i> Apoiar via Mercado Pago</a>
         </div>
+
+        <div class="ad-unit-wrapper">
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9454035977656735" crossorigin="anonymous"></script>
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-client="ca-pub-9454035977656735"
+                 data-ad-slot="ca-pub-9454035977656735"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
     </div>
 
     <script>
         lucide.createIcons();
         let currentUser = null;
-        let currentFilter = 'all';
         let isAllTime = false;
 
         const now = new Date();
@@ -338,26 +290,13 @@
             lucide.createIcons();
         }
 
-        function toggleAllTime() {
-            isAllTime = !isAllTime;
-            const btn = document.getElementById('btn-all-time');
-            const monthInput = document.getElementById('filter-month');
-            btn.classList.toggle('active', isAllTime);
-            monthInput.disabled = isAllTime;
-            monthInput.style.opacity = isAllTime ? "0.4" : "1";
-            updateUI();
-        }
-
         function handleRegister() {
             const name = document.getElementById('reg-name').value;
             const email = document.getElementById('reg-email').value.toLowerCase().trim();
             const pass = document.getElementById('reg-pass').value;
-            
             if(!name || !email || !pass) return;
-
             let users = JSON.parse(localStorage.getItem('nexus_users') || "[]");
             if(users.find(u => u.email === email)) return alert("E-mail já existe.");
-            
             users.push({ name, email, pass, transactions: [] });
             localStorage.setItem('nexus_users', JSON.stringify(users));
             alert("Conta criada!"); 
@@ -379,13 +318,6 @@
         }
 
         function handleLogout() { location.reload(); }
-
-        function setFilter(filter) {
-            currentFilter = filter;
-            document.querySelectorAll('.filters-container .filter-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`filter-${filter}`).classList.add('active');
-            updateUI();
-        }
 
         function saveTransaction() {
             const id = document.getElementById('t-id').value;
@@ -462,9 +394,7 @@
             });
 
             const filtered = currentUser.transactions.filter(t => {
-                const matchPeriod = isAllTime || t.monthKey === selectedMonth;
-                const matchType = currentFilter === 'all' || t.type === currentFilter;
-                return matchPeriod && matchType;
+                return t.monthKey === selectedMonth;
             }).sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate));
 
             filtered.forEach(t => {
@@ -476,7 +406,7 @@
                             <span class="date-badge">${t.date}</span>
                         </div>
                         <div class="item-values">
-                            <span style="font-weight:700; font-size: 1.05rem; color:${t.type === 'in' ? 'var(--success)' : 'var(--danger)'}">
+                            <span style="font-weight:700; color:${t.type === 'in' ? 'var(--success)' : 'var(--danger)'}">
                                 ${t.type === 'in' ? '+' : '-'} R$ ${t.amount.toFixed(2)}
                             </span>
                         </div>
@@ -487,17 +417,9 @@
                     </div>`;
             });
 
-            if(!filtered.length) hist.innerHTML = `<p style="text-align:center; color:var(--text-muted); margin-top:20px;">Vazio.</p>`;
-
-            const labelSuffix = isAllTime ? " TOTAL" : " DO MÊS";
-            document.getElementById('label-in').innerText = "GANHOS" + labelSuffix;
-            document.getElementById('label-out').innerText = "DESPESAS" + labelSuffix;
-            document.getElementById('label-month').innerText = "SALDO" + labelSuffix;
-
             document.getElementById('in-val').innerText = `R$ ${tIn.toFixed(2)}`;
             document.getElementById('out-val').innerText = `R$ ${tOut.toFixed(2)}`;
             document.getElementById('month-val').innerText = `R$ ${(tIn - tOut).toFixed(2)}`;
-            
             document.getElementById('total-val').innerText = `R$ ${(totalHistoryIn - totalHistoryOut).toFixed(2)}`;
             
             lucide.createIcons();
