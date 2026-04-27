@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-adsense-account" content="ca-pub-9454035977656735">
+    
     <title>Nexus Finance | Gestão Inteligente</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;800&display=swap" rel="stylesheet">
@@ -351,7 +353,6 @@
             const email = document.getElementById('reg-email').value.toLowerCase().trim();
             const pass = document.getElementById('reg-pass').value;
             
-            // Verificação extra de segurança via JS
             if(!name || !email || !pass) return;
 
             let users = JSON.parse(localStorage.getItem('nexus_users') || "[]");
