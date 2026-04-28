@@ -1,0 +1,76 @@
+
+-- Tabela de perfis de usuário
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  name text not null,
+  email text not null,
+  created_at timestamptz default now()
+);
+
+alter table public.profiles enable row level security;
+
+create policy "Users can view own profile"
+  on public.profiles for select
+  using (auth.uid() = id);
+
+create policy "Users can update own profile"
+  on public.profiles for update
+  using (auth.uid() = id);
+
+create policy "Users can insert own profile"
+  on public.profiles for insert
+  with check (auth.uid() = id);
+
+-- Trigger para criar perfil automaticamente ao cadastrar
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer as $$
+begin
+  insert into public.profiles (id, name, email)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+    new.email
+  );
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- Tabela de transações financeiras
+create table if not exists public.transactions (
+  id bigserial primary key,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  description text not null,
+  amount numeric(12, 2) not null,
+  type text not null check (type in ('in', 'out')),
+  date text not null,
+  month_key text not null,
+  raw_date date not null,
+  created_at timestamptz default now()
+);
+
+alter table public.transactions enable row level security;
+
+create policy "Users can view own transactions"
+  on public.transactions for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own transactions"
+  on public.transactions for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update own transactions"
+  on public.transactions for update
+  using (auth.uid() = user_id);
+
+create policy "Users can delete own transactions"
+  on public.transactions for delete
+  using (auth.uid() = user_id);
+
+-- Índices
+create index if not exists idx_transactions_user_id on public.transactions(user_id);
+create index if not exists idx_transactions_month_key on public.transactions(month_key);

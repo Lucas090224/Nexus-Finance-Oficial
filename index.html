@@ -9,6 +9,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root {
@@ -79,6 +80,7 @@
             text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;
         }
         .btn:hover { background: #4f46e5; transform: scale(1.01); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         .btn-help {
             background: transparent;
@@ -158,6 +160,23 @@
         }
         .btn-mp { background: var(--mercadopago); display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 30px; font-size: 0.85rem; margin-top: 15px; border-radius: 12px; color: white; text-decoration: none; font-weight: 700; width: auto; }
 
+        .toast {
+            position: fixed; bottom: 20px; right: 20px; background: var(--card);
+            border: 1px solid rgba(255,255,255,0.1); padding: 14px 20px;
+            border-radius: 12px; font-size: 0.85rem; font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4); z-index: 9999;
+            animation: fadeIn 0.3s ease; display: none;
+        }
+        .toast.success { border-color: var(--success); color: var(--success); }
+        .toast.error { border-color: var(--danger); color: var(--danger); }
+
+        .loading-spinner {
+            width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white; border-radius: 50%;
+            animation: spin 0.7s linear infinite; display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -171,7 +190,7 @@
                 
                 <h3><i data-lucide="list-checks" style="width:18px"></i> Passo a Passo</h3>
                 <ol>
-                    <li><strong>Crie sua Conta:</strong> No menu inicial, clique em "Registrar". Seus dados de acesso ficarão salvos apenas no seu navegador.</li>
+                    <li><strong>Crie sua Conta:</strong> No menu inicial, clique em "Registrar". Seus dados ficam salvos na nuvem.</li>
                     <li><strong>Acesse o Painel:</strong> Faça login com seu e-mail e senha cadastrados.</li>
                     <li><strong>Adicione Transações:</strong> Use o formulário à esquerda. Digite a descrição (ex: Salário), o valor e escolha a data.</li>
                     <li><strong>Defina o Tipo:</strong> Selecione "Entrada" para dinheiro que entra ou "Saída" para despesas. Clique em Salvar.</li>
@@ -180,13 +199,15 @@
                 </ol>
 
                 <h3><i data-lucide="shield-check" style="width:18px"></i> Privacidade e Dados</h3>
-                <p>O Nexus Finance utiliza o sistema de <strong>armazenamento local</strong>. Isso garante que suas informações financeiras não saiam do seu dispositivo. <strong>Atenção:</strong> Limpar o histórico ou cache do navegador apagará seus dados salvos.</p>
+                <p>O Nexus Finance utiliza banco de dados em nuvem seguro. Seus dados são protegidos e acessíveis de qualquer dispositivo.</p>
                 
                 <h3><i data-lucide="file-text" style="width:18px"></i> Termos de Uso</h3>
-                <p>Esta é uma ferramenta de uso pessoal. Não nos responsabilizamos por perda de dados devido a falhas no dispositivo ou limpeza do navegador.</p>
+                <p>Esta é uma ferramenta de uso pessoal. Não nos responsabilizamos por perda de dados devido a fatores externos.</p>
             </div>
         </div>
     </div>
+
+    <div id="toast" class="toast"></div>
 
     <div id="auth-wrapper" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
         <div class="auth-card">
@@ -203,7 +224,7 @@
                     <label>Senha</label>
                     <div class="input-wrapper"><i data-lucide="lock"></i><input type="password" id="login-pass" placeholder="••••••••"></div>
                 </div>
-                <button class="btn" onclick="handleLogin()">Acessar Conta</button>
+                <button class="btn" id="btn-login" onclick="handleLogin()">Acessar Conta</button>
                 <div style="text-align:center; margin-top:15px; font-size:0.85rem; color:var(--text-muted)">
                     Não tem conta? <span onclick="toggleAuth('register-screen')" style="color:var(--primary); cursor:pointer; font-weight:700">Registrar</span>
                 </div>
@@ -224,7 +245,7 @@
                         <label>Senha</label>
                         <div class="input-wrapper"><i data-lucide="lock"></i><input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres" minlength="6" required></div>
                     </div>
-                    <button type="submit" class="btn">Criar Agora</button>
+                    <button type="submit" class="btn" id="btn-register">Criar Agora</button>
                     <div style="text-align:center; margin-top:15px; font-size:0.85rem; color:var(--text-muted)">
                         Já é membro? <span onclick="toggleAuth('login-screen')" style="color:var(--primary); cursor:pointer; font-weight:700">Login</span>
                     </div>
@@ -288,21 +309,61 @@
         </div>
 
         <div class="support-container">
-            <h3>Apoie o Nexus Finance 🚀</h3>
+            <h3>Apoie o Nexus Finance</h3>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">Ajude a manter o projeto ativo e gratuito.</p>
             <a href="https://mpago.la/1K43Rnr" target="_blank" class="btn-mp"><i data-lucide="heart"></i> Apoiar via Mercado Pago</a>
         </div>
     </div>
 
     <script>
-        lucide.createIcons();
+        // ── Supabase init ──────────────────────────────────────────────
+        const { createClient } = supabase;
+        const sb = createClient(
+            'https://spb-t4nn7r15cx887q48.supabase.opentrust.net',
+            'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYW5vbiIsInJlZiI6InNwYi10NG5uN3IxNWN4ODg3cTQ4IiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3NzcyNjMxNzIsImV4cCI6MjA5MjgzOTE3Mn0.bmm2AJWbkizErusDj8VVOA2kHC2wuy8makJ9e2ADmDY'
+        );
+
+        // ── Estado global ──────────────────────────────────────────────
         let currentUser = null;
+        let allTransactions = [];
         let periodFilter = 'month';
         let typeFilter = 'all';
 
         const now = new Date();
         document.getElementById('filter-month').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
         document.getElementById('t-date').valueAsDate = now;
+
+        // ── Inicialização ──────────────────────────────────────────────
+        lucide.createIcons();
+
+        sb.auth.onAuthStateChange((event, session) => {
+            if (session && session.user) {
+                setTimeout(() => loadUser(session.user), 0);
+            } else {
+                showAuth();
+            }
+        });
+
+        // ── Toast ──────────────────────────────────────────────────────
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = `toast ${type}`;
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 3000);
+        }
+
+        // ── Auth helpers ───────────────────────────────────────────────
+        function setLoading(btnId, loading) {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            if (loading) {
+                btn.disabled = true;
+                btn.innerHTML = `<span class="loading-spinner"></span>`;
+            } else {
+                btn.disabled = false;
+            }
+        }
 
         function openModal() { document.getElementById('help-modal').style.display = 'flex'; }
         function closeModal() { document.getElementById('help-modal').style.display = 'none'; }
@@ -313,35 +374,152 @@
             lucide.createIcons();
         }
 
-        function handleRegister() {
-            const name = document.getElementById('reg-name').value;
+        async function handleRegister() {
+            const name = document.getElementById('reg-name').value.trim();
             const email = document.getElementById('reg-email').value.toLowerCase().trim();
             const pass = document.getElementById('reg-pass').value;
-            if(!name || !email || !pass) return;
-            let users = JSON.parse(localStorage.getItem('nexus_users') || "[]");
-            if(users.find(u => u.email === email)) return alert("E-mail já existe.");
-            users.push({ name, email, pass, transactions: [] });
-            localStorage.setItem('nexus_users', JSON.stringify(users));
-            alert("Conta criada!"); toggleAuth('login-screen');
+            if (!name || !email || !pass) return;
+
+            setLoading('btn-register', true);
+            const { error } = await sb.auth.signUp({
+                email, password: pass,
+                options: { data: { name }, emailRedirectTo: window.location.origin + '/' }
+            });
+            setLoading('btn-register', false);
+
+            if (error) {
+                showToast(error.message, 'error');
+            } else {
+                showToast('Conta criada com sucesso!');
+                toggleAuth('login-screen');
+            }
         }
 
-        function handleLogin() {
+        async function handleLogin() {
             const email = document.getElementById('login-email').value.toLowerCase().trim();
             const pass = document.getElementById('login-pass').value;
-            let users = JSON.parse(localStorage.getItem('nexus_users') || "[]");
-            const user = users.find(u => u.email === email && u.pass === pass);
-            if(user) {
-                currentUser = user;
-                document.getElementById('auth-wrapper').style.display = 'none';
-                document.getElementById('app-screen').classList.add('active');
-                document.getElementById('user-name-display').innerText = `Olá, ${user.name.split(' ')[0]}`;
-                updateUI();
-            } else alert("Dados inválidos.");
+
+            setLoading('btn-login', true);
+            const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+            setLoading('btn-login', false);
+
+            if (error) {
+                document.getElementById('btn-login').innerHTML = 'Acessar Conta';
+                showToast('E-mail ou senha incorretos.', 'error');
+            }
         }
 
-        function handleLogout() { location.reload(); }
+        async function handleLogout() {
+            await sb.auth.signOut();
+        }
 
-        // Novos Filtros
+        function showAuth() {
+            currentUser = null;
+            allTransactions = [];
+            document.getElementById('auth-wrapper').style.display = 'flex';
+            document.getElementById('app-screen').classList.remove('active');
+            document.getElementById('btn-login').innerHTML = 'Acessar Conta';
+            lucide.createIcons();
+        }
+
+        async function loadUser(authUser) {
+            currentUser = authUser;
+
+            // Busca o perfil para obter o nome
+            const { data: profile } = await sb.from('profiles').select('name').eq('id', authUser.id).maybeSingle();
+            const name = profile?.name || authUser.email.split('@')[0];
+            document.getElementById('user-name-display').innerText = `Olá, ${name.split(' ')[0]}`;
+
+            document.getElementById('auth-wrapper').style.display = 'none';
+            document.getElementById('app-screen').classList.add('active');
+
+            await fetchTransactions();
+        }
+
+        // ── Transações ─────────────────────────────────────────────────
+        async function fetchTransactions() {
+            const { data, error } = await sb
+                .from('transactions')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('raw_date', { ascending: false });
+
+            if (error) { showToast('Erro ao carregar transações.', 'error'); return; }
+            allTransactions = data || [];
+            updateUI();
+        }
+
+        async function saveTransaction() {
+            const tid = document.getElementById('t-id').value;
+            const desc = document.getElementById('t-desc').value.trim();
+            const amount = parseFloat(document.getElementById('t-amount').value);
+            const type = document.getElementById('t-type').value;
+            const rawDate = document.getElementById('t-date').value;
+
+            if (!desc || isNaN(amount) || !rawDate) return showToast('Preencha todos os campos!', 'error');
+
+            const dateObj = new Date(rawDate + 'T12:00:00');
+            const record = {
+                user_id: currentUser.id,
+                description: desc,
+                amount,
+                type,
+                date: dateObj.toLocaleDateString('pt-BR'),
+                month_key: `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`,
+                raw_date: rawDate
+            };
+
+            setLoading('btn-save', true);
+
+            if (tid) {
+                const { error } = await sb.from('transactions').update(record).eq('id', parseInt(tid)).eq('user_id', currentUser.id);
+                if (error) { showToast('Erro ao atualizar.', 'error'); }
+                else { showToast('Transação atualizada!'); resetForm(); await fetchTransactions(); }
+            } else {
+                const { error } = await sb.from('transactions').insert(record);
+                if (error) { showToast('Erro ao salvar.', 'error'); }
+                else { showToast('Transação salva!'); resetForm(); await fetchTransactions(); }
+            }
+
+            document.getElementById('btn-save').innerHTML = tid ? "<i data-lucide='refresh-cw'></i> Atualizar" : "<i data-lucide='plus'></i> Salvar";
+            document.getElementById('btn-save').disabled = false;
+            lucide.createIcons();
+        }
+
+        async function deleteTransaction(id) {
+            if (!confirm('Excluir esta transação?')) return;
+            const { error } = await sb.from('transactions').delete().eq('id', id).eq('user_id', currentUser.id);
+            if (error) { showToast('Erro ao excluir.', 'error'); return; }
+            showToast('Transação excluída.');
+            await fetchTransactions();
+        }
+
+        function editTransaction(id) {
+            const t = allTransactions.find(t => t.id === id);
+            if (!t) return;
+            document.getElementById('t-id').value = t.id;
+            document.getElementById('t-desc').value = t.description;
+            document.getElementById('t-amount').value = t.amount;
+            document.getElementById('t-type').value = t.type;
+            document.getElementById('t-date').value = t.raw_date;
+            document.getElementById('form-title').innerText = 'Editar Transação';
+            document.getElementById('btn-save').innerHTML = "<i data-lucide='refresh-cw'></i> Atualizar";
+            document.getElementById('btn-cancel-edit').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function resetForm() {
+            document.getElementById('t-id').value = '';
+            document.getElementById('t-desc').value = '';
+            document.getElementById('t-amount').value = '';
+            document.getElementById('t-date').valueAsDate = new Date();
+            document.getElementById('form-title').innerText = 'Nova Transação';
+            document.getElementById('btn-save').innerHTML = "<i data-lucide='plus'></i> Salvar";
+            document.getElementById('btn-cancel-edit').style.display = 'none';
+            lucide.createIcons();
+        }
+
+        // ── Filtros ────────────────────────────────────────────────────
         function setPeriod(p) {
             periodFilter = p;
             document.getElementById('f-period-month').classList.toggle('active', p === 'month');
@@ -357,100 +535,43 @@
             updateUI();
         }
 
-        function saveTransaction() {
-            const id = document.getElementById('t-id').value;
-            const desc = document.getElementById('t-desc').value;
-            const amount = parseFloat(document.getElementById('t-amount').value);
-            const type = document.getElementById('t-type').value;
-            const rawDate = document.getElementById('t-date').value;
-
-            if(!desc || isNaN(amount) || !rawDate) return alert("Preencha tudo!");
-
-            let users = JSON.parse(localStorage.getItem('nexus_users'));
-            const uIdx = users.findIndex(u => u.email === currentUser.email);
-            const dateObj = new Date(rawDate + "T12:00:00");
-            const newT = { 
-                id: id ? parseInt(id) : Date.now(), 
-                desc, amount, type, 
-                date: dateObj.toLocaleDateString('pt-BR'), 
-                monthKey: `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`,
-                rawDate 
-            };
-
-            if(id) {
-                const tIdx = users[uIdx].transactions.findIndex(t => t.id == id);
-                users[uIdx].transactions[tIdx] = newT;
-            } else users[uIdx].transactions.push(newT);
-
-            localStorage.setItem('nexus_users', JSON.stringify(users));
-            currentUser = users[uIdx];
-            resetForm(); updateUI();
-        }
-
-        function deleteTransaction(id) {
-            if(!confirm("Excluir?")) return;
-            let users = JSON.parse(localStorage.getItem('nexus_users'));
-            const uIdx = users.findIndex(u => u.email === currentUser.email);
-            users[uIdx].transactions = users[uIdx].transactions.filter(t => t.id !== id);
-            localStorage.setItem('nexus_users', JSON.stringify(users));
-            currentUser = users[uIdx]; updateUI();
-        }
-
-        function editTransaction(id) {
-            const t = currentUser.transactions.find(t => t.id === id);
-            document.getElementById('t-id').value = t.id;
-            document.getElementById('t-desc').value = t.desc;
-            document.getElementById('t-amount').value = t.amount;
-            document.getElementById('t-type').value = t.type;
-            document.getElementById('t-date').value = t.rawDate;
-            document.getElementById('form-title').innerText = "Editar Transação";
-            document.getElementById('btn-save').innerHTML = "<i data-lucide='refresh-cw'></i> Atualizar";
-            document.getElementById('btn-cancel-edit').style.display = "flex";
-            lucide.createIcons();
-        }
-
-        function resetForm() {
-            document.getElementById('t-id').value = "";
-            document.getElementById('t-desc').value = "";
-            document.getElementById('t-amount').value = "";
-            document.getElementById('t-date').valueAsDate = new Date();
-            document.getElementById('form-title').innerText = "Nova Transação";
-            document.getElementById('btn-save').innerHTML = "<i data-lucide='plus'></i> Salvar";
-            document.getElementById('btn-cancel-edit').style.display = "none";
-            lucide.createIcons();
-        }
-
+        // ── Renderização ───────────────────────────────────────────────
         function updateUI() {
             const hist = document.getElementById('history');
             const selectedMonth = document.getElementById('filter-month').value;
-            hist.innerHTML = "";
+            hist.innerHTML = '';
             let totalGeneral = 0, fIn = 0, fOut = 0;
 
-            currentUser.transactions.forEach(t => {
-                if(t.type === 'in') totalGeneral += t.amount; else totalGeneral -= t.amount;
+            allTransactions.forEach(t => {
+                if (t.type === 'in') totalGeneral += parseFloat(t.amount);
+                else totalGeneral -= parseFloat(t.amount);
             });
 
-            // Filtro Combinado (Período + Tipo)
-            const filtered = currentUser.transactions.filter(t => {
-                const matchPeriod = (periodFilter === 'all') || (t.monthKey === selectedMonth);
+            const filtered = allTransactions.filter(t => {
+                const matchPeriod = (periodFilter === 'all') || (t.month_key === selectedMonth);
                 const matchType = (typeFilter === 'all') || (t.type === typeFilter);
                 return matchPeriod && matchType;
-            }).sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate));
+            }).sort((a, b) => new Date(b.raw_date) - new Date(a.raw_date));
 
-            filtered.forEach(t => {
-                if(t.type === 'in') fIn += t.amount; else fOut += t.amount;
-                hist.innerHTML += `
-                    <div class="history-item">
-                        <div><strong>${t.desc}</strong><br><span class="date-badge">${t.date}</span></div>
-                        <div style="text-align:right">
-                            <span style="font-weight:700; color:${t.type === 'in' ? 'var(--success)' : 'var(--danger)'}">
-                                ${t.type === 'in' ? '+' : '-'} R$ ${t.amount.toFixed(2)}
-                            </span><br>
-                            <button class="action-btn" onclick="editTransaction(${t.id})"><i data-lucide="edit-2" style="width:14px"></i></button>
-                            <button class="action-btn" onclick="deleteTransaction(${t.id})" style="color:var(--danger)"><i data-lucide="trash-2" style="width:14px"></i></button>
-                        </div>
-                    </div>`;
-            });
+            if (filtered.length === 0) {
+                hist.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:30px 0; font-size:0.9rem;">Nenhuma transação encontrada.</p>';
+            } else {
+                filtered.forEach(t => {
+                    const amt = parseFloat(t.amount);
+                    if (t.type === 'in') fIn += amt; else fOut += amt;
+                    hist.innerHTML += `
+                        <div class="history-item">
+                            <div><strong>${t.description}</strong><br><span class="date-badge">${t.date}</span></div>
+                            <div style="text-align:right">
+                                <span style="font-weight:700; color:${t.type === 'in' ? 'var(--success)' : 'var(--danger)'}">
+                                    ${t.type === 'in' ? '+' : '-'} R$ ${amt.toFixed(2)}
+                                </span><br>
+                                <button class="action-btn" onclick="editTransaction(${t.id})"><i data-lucide="edit-2" style="width:14px"></i></button>
+                                <button class="action-btn" onclick="deleteTransaction(${t.id})" style="color:var(--danger)"><i data-lucide="trash-2" style="width:14px"></i></button>
+                            </div>
+                        </div>`;
+                });
+            }
 
             document.getElementById('in-val').innerText = `R$ ${fIn.toFixed(2)}`;
             document.getElementById('out-val').innerText = `R$ ${fOut.toFixed(2)}`;
